@@ -216,7 +216,7 @@ a usable address or network range in the range passed in as the value
 address of the value)::
 
     # {% for address in ['192.168.0.0/24', '192.168.1.0/24'] | ipaddr %}
-    {{ '192.168.32.0/24' | network_in_usable(address) }}
+    {{ '192.168.0.0/16' | network_in_usable(address) }}
     {% endfor %} "
     True
     False
