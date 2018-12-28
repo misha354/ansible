@@ -196,6 +196,31 @@ that range::
     # {{ test_list | ipaddr('192.0.0.0/8') }}
     ['192.24.2.1', '192.168.32.0/24']
 
+You can also use ``network_in_network()`` to do the same check.
+However, unlike ``ipaddr``, ``network_in_network()`` always returns a Boolean and
+any query that is not a valid network range (including a list) will cause an
+exception::
+
+    # {% for address in test_list | ipaddr %}
+    # {{ '192.0.0.0/8' | network_in_network(address)}}
+    # {% endfor  %}
+    True
+    False
+    True
+    False
+    False
+
+The ``network_in_usable()`` filter, checks whether the query is
+a usable address or network range in the range passed in as the value
+(meaning that the query does not contain the network or broadcast
+address of the value)::
+
+    # {% for address in test_list | ipaddr %}
+    {{ '192.168.32.0/24' | network_in_usable(address) }}
+    {% endfor %} "
+    True
+    False
+
 If you specify a positive or negative integer as a query, ``ipaddr()`` will
 treat this as an index and will return the specific IP address from a network
 range, in the 'host/prefix' format::
@@ -226,6 +251,15 @@ end of the range::
     # {{ test_list | ipaddr('net') | ipaddr('400') }}
     ['2001:db8:32c:faad::190/64']
 
+More fine-grained selection is possible. For example, you can choose
+Using ``nthhost``, you can get the`
+    # Returns the nth host within a network described by value.
+# Usage:
+#
+#  - address or address/prefix | nthhost(nth)
+#      returns the nth host within the given network
+    
+    
 
 Getting information from host/prefix values
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -380,6 +414,12 @@ You can convert IP addresses to PTR records::
     0.0.1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.e.f.ip6.arpa.
     0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.d.a.a.f.c.2.3.0.8.b.d.0.1.0.0.2.ip6.arpa.
 
+You can convert IPv4 addresses into hexadecimal integers::    
+
+    # {% for address in test_list | ipv4('address') %}
+    # {{ address | ip4_hex }}
+    # {% endfor %}
+    c0180201
 
 Converting IPv4 address to a 6to4 address
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
