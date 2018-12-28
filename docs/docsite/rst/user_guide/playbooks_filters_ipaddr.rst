@@ -215,7 +215,7 @@ a usable address or network range in the range passed in as the value
 (meaning that the query does not contain the network or broadcast
 address of the value)::
 
-    # {% for address in test_list | ipaddr %}
+    # {% for address in ['192.168.0.0/24', '192.168.1.0/24'] | ipaddr %}
     {{ '192.168.32.0/24' | network_in_usable(address) }}
     {% endfor %} "
     True
