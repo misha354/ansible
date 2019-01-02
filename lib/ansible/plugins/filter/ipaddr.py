@@ -329,7 +329,7 @@ def _ipv6_range_usable_query(v):
         first_usable, last_usable = _ipv6_first_last(v)
         first_usable = str(netaddr.IPAddress(first_usable))
         last_usable = str(netaddr.IPAddress(last_usable))
-        return "{0}-{1}, except addresses ending in fdff:ffff:ffff:ff80-fdff:ffff:ffff:ffff (reserved anycast per RFC 2526)".format(first_usable, last_usable)
+        return "{0}-{1}, except anycast addresses reserved per https://www.iana.org/assignments/ipv6-interface-ids/ipv6-interface-ids.txt".format(first_usable, last_usable)
 
 
 def _range_usable_query(v, vtype):
