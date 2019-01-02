@@ -196,10 +196,10 @@ that range::
     # {{ test_list | ipaddr('192.0.0.0/8') }}
     ['192.24.2.1', '192.168.32.0/24']
 
-You can also use ``network_in_network()`` to do the same check.
-However, unlike ``ipaddr``, ``network_in_network()`` always returns a Boolean and
-any query that is not a valid network range (including a list) will cause an
-exception::
+You can also use the ``network_in_network()`` filter to do the same check.
+However, unlike ``ipaddr``, ``network_in_network()`` always returns a Boolean.
+Also, any query that is not a valid network range (including a list) will cause an
+exception, requiring the use of an extra ``ipaddr`` filter in the following example::
 
     # {% for address in test_list | ipaddr %}
     # {{ '192.0.0.0/8' | network_in_network(address)}}
@@ -208,17 +208,6 @@ exception::
     False
     True
     False
-    False
-
-The ``network_in_usable()`` filter, checks whether the query is
-a usable address or network range in the range passed in as the value
-(meaning that the query does not contain the network or broadcast
-address of the value)::
-
-    # {% for address in ['192.168.0.0/24', '192.168.1.0/24'] | ipaddr %}
-    {{ '192.168.0.0/16' | network_in_usable(address) }}
-    {% endfor %} "
-    True
     False
 
 If you specify a positive or negative integer as a query, ``ipaddr()`` will
@@ -251,15 +240,27 @@ end of the range::
     # {{ test_list | ipaddr('net') | ipaddr('400') }}
     ['2001:db8:32c:faad::190/64']
 
-More fine-grained selection is possible. For example, you can choose
-Using ``nthhost``, you can get the`
-    # Returns the nth host within a network described by value.
-# Usage:
-#
-#  - address or address/prefix | nthhost(nth)
-#      returns the nth host within the given network
-    
-    
+Finding usable addresses from network ranges
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``ipaddr('range_usable')`` will take a network range in
+CIDR notation and print the range of usable IP addresses in that range
+(that is, all the IP addresses except the network and broadcast addresses)::
+  
+    # {{ test_list | ipaddr('net') | ipaddr('range_usable') }}
+    ["192.168.32.1-192.168.32.254", "2001:db8:32c:faad::1-2001:db8:32c:faad:ffff:ffff:ffff:ffff, except addresses ending in fdff:ffff:ffff:ff80-fdff:ffff:ffff:ffff (reserved anycast per RFC 2526)"]
+   
+The ``network_in_usable()`` filter checks whether the query is
+a usable address or network range in within a network range passed in as the value
+(meaning that the query does not contain the network or broadcast
+address of the value)::
+
+    # {% for address in ['192.168.0.0/24', '192.168.1.0/24', '192.168.0.1'] | ipaddr %}
+    {{ '192.168.0.0/16' | network_in_usable(address) }}
+    {% endfor %} "
+    False
+    True
+    True
 
 Getting information from host/prefix values
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

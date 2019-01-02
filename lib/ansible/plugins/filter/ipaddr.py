@@ -57,6 +57,16 @@ def _first_last(v):
         last_usable = int(netaddr.IPAddress(v.last - 1))
         return first_usable, last_usable
 
+def _ipv6_first_last(v):
+    if v.size == 2:
+        first_usable = int(netaddr.IPAddress(v.first))
+        last_usable = int(netaddr.IPAddress(v.last))
+        return first_usable, last_usable
+    elif v.size > 1:
+        first_usable = int(netaddr.IPAddress(v.first + 1))
+        last_usable = int(netaddr.IPAddress(v.last))
+        return first_usable, last_usable
+
 
 def _6to4_query(v, vtype, value):
     if v.version == 4:
@@ -306,12 +316,30 @@ def _public_query(v, value):
         return value
 
 
+def _ipv6_range_usable_query(v):
+    bits=v.ip.bits()
+
+    if (bits[0:8] == "11111111"):
+        raise errors.AnsibleFilterError('Host addresses not allowed on multicast address range (RFC 2526)')
+
+    if (v.prefixlen != 127 and bits[0:3] != "000" and v.prefixlen > 64):
+        raise errors.AnsibleFilterError("Prefix between 65 and 126 bits forbidden for address not starting with binary 000 (RFC 2526)")
+
+    if v.size > 1:
+        first_usable, last_usable = _ipv6_first_last(v)
+        first_usable = str(netaddr.IPAddress(first_usable))
+        last_usable = str(netaddr.IPAddress(last_usable))
+        return "{0}-{1}, except addresses ending in fdff:ffff:ffff:ff80-fdff:ffff:ffff:ffff (reserved anycast per RFC 2526)".format(first_usable, last_usable)
+
+
 def _range_usable_query(v, vtype):
     if vtype == 'address':
         "Does it make sense to raise an error"
         raise errors.AnsibleFilterError('Not a network address')
     elif vtype == 'network':
-        if v.size > 1:
+        if v.version == 6:
+            return _ipv6_range_usable_query(v)
+        elif v.size > 1:
             first_usable, last_usable = _first_last(v)
             first_usable = str(netaddr.IPAddress(first_usable))
             last_usable = str(netaddr.IPAddress(last_usable))
