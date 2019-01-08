@@ -248,7 +248,7 @@ CIDR notation and print the range of usable IP addresses in that range::
   
     # {{ test_list | ipaddr('net') | ipaddr('range_usable') }}
     [ "192.168.32.1-192.168.32.254",
-      "2001:db8:32c:faad::1-2001:db8:32c:faad:ffff:ffff:ffff:ffff, except those reserved per https://www.iana.org/assignments/ipv6-interface-ids/ipv6-interface-ids.txt"
+      "2001:db8:32c:faad::1-2001:db8:32c:faad:ffff:ffff:ffff:ffff, except those reserved per https://www.iana.org/assignments/ipv6-interface-ids/ipv6-interface-ids.txt" ]
    
 The ``network_in_usable()`` filter checks whether the query is
 a usable address or network range inside another network range::
