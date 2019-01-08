@@ -244,16 +244,14 @@ Finding usable addresses from network ranges
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ``ipaddr('range_usable')`` will take a network range in
-CIDR notation and print the range of usable IP addresses in that range
-(that is, all the IP addresses except the network and broadcast addresses)::
+CIDR notation and print the range of usable IP addresses in that range::
   
     # {{ test_list | ipaddr('net') | ipaddr('range_usable') }}
-    ["192.168.32.1-192.168.32.254", "2001:db8:32c:faad::1-2001:db8:32c:faad:ffff:ffff:ffff:ffff, except addresses ending in fdff:ffff:ffff:ff80-fdff:ffff:ffff:ffff (reserved anycast per RFC 2526)"]
+    [ "192.168.32.1-192.168.32.254",
+      "2001:db8:32c:faad::1-2001:db8:32c:faad:ffff:ffff:ffff:ffff, except those reserved per https://www.iana.org/assignments/ipv6-interface-ids/ipv6-interface-ids.txt"
    
 The ``network_in_usable()`` filter checks whether the query is
-a usable address or network range in within a network range passed in as the value
-(meaning that the query does not contain the network or broadcast
-address of the value)::
+a usable address or network range inside another network range::
 
     # {% for address in ['192.168.0.0/24', '192.168.1.0/24', '192.168.0.1'] | ipaddr %}
     {{ '192.168.0.0/16' | network_in_usable(address) }}

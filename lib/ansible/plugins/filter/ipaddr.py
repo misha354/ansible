@@ -329,7 +329,7 @@ def _ipv6_range_usable_query(v):
         first_usable, last_usable = _ipv6_first_last(v)
         first_usable = str(netaddr.IPAddress(first_usable))
         last_usable = str(netaddr.IPAddress(last_usable))
-        return "{0}-{1}, except anycast addresses reserved per https://www.iana.org/assignments/ipv6-interface-ids/ipv6-interface-ids.txt".format(first_usable, last_usable)
+        return "{0}-{1}, except those reserved per https://www.iana.org/assignments/ipv6-interface-ids/ipv6-interface-ids.txt".format(first_usable, last_usable)
 
 
 def _range_usable_query(v, vtype):
@@ -337,7 +337,8 @@ def _range_usable_query(v, vtype):
         "Does it make sense to raise an error"
         raise errors.AnsibleFilterError('Not a network address')
     elif vtype == 'network':
-        if v.version == 6:
+        if v.version == 6 and (int(v.ip) & 0xffffffffffffffffffff0000000000000000) != 0:
+            # this is an IPv6 network (and not IP4 mapped network)
             return _ipv6_range_usable_query(v)
         elif v.size > 1:
             first_usable, last_usable = _first_last(v)
