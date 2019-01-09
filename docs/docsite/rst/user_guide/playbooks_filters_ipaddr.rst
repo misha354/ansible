@@ -229,6 +229,8 @@ end of the range::
 Finding usable addresses from network ranges
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+.. versionadded:: 2.4
+
 ``ipaddr('range_usable')`` will take a network range in
 CIDR notation and print the range of usable IP addresses in that range::
   
