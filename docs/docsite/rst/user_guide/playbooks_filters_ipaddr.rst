@@ -239,12 +239,20 @@ CIDR notation and print the range of usable IP addresses in that range::
 The ``network_in_usable()`` filter checks whether the query is
 a usable address or network range inside another network range::
 
-    # {% for address in ['192.168.0.0/24', '192.168.1.0/24', '192.168.0.1'] | ipaddr %}
+    # {% for address in ['192.168.0.0/24', '192.168.1.0/24', '192.168.0.1', '192.168.255.255'] | ipaddr %}
     {{ '192.168.0.0/16' | network_in_usable(address) }}
     {% endfor %} "
     False
     True
     True
+    False
+
+    # "{{ '2001::dead:beef:0:0:0:0/64' | network_in_usable('2001::dead:beef:ffff:ffff:ffff:ffff') }}"
+    True
+    
+Note that both of these filters give correct answers with respect to the last
+address on a subnet. It is not a usable host address in IPv4 (as it's the
+broadcast address), but is a perfectly valid usable host in IPv6.
 
 Getting information from host/prefix values
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

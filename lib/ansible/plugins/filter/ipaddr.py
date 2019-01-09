@@ -948,8 +948,7 @@ def network_in_usable(value, test):
     :param test: The string representation of an address or network to validate if it is within the range of 'value'.
 
     :return: bool
-    '''
-        
+    '''        
     # normalize value and test variables into an ipaddr
     v = _address_normalizer(value)
     w = _address_normalizer(test)
