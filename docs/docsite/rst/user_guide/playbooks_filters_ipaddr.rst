@@ -196,20 +196,6 @@ that range::
     # {{ test_list | ipaddr('192.0.0.0/8') }}
     ['192.24.2.1', '192.168.32.0/24']
 
-You can also use the ``network_in_network()`` filter to do the same check.
-However, unlike ``ipaddr``, ``network_in_network()`` always returns a Boolean.
-Also, any query that is not a valid network range (including a list) will cause an
-exception, requiring the use of an extra ``ipaddr`` filter in the following example::
-
-    # {% for address in test_list | ipaddr %}
-    # {{ '192.0.0.0/8' | network_in_network(address)}}
-    # {% endfor  %}
-    True
-    False
-    True
-    False
-    False
-
 If you specify a positive or negative integer as a query, ``ipaddr()`` will
 treat this as an index and will return the specific IP address from a network
 range, in the 'host/prefix' format::

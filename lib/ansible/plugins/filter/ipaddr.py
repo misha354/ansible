@@ -54,19 +54,12 @@ def _first_last(v):
         return first_usable, last_usable
     elif v.size > 1:
         first_usable = int(netaddr.IPAddress(v.first + 1))
-        last_usable = int(netaddr.IPAddress(v.last - 1))
-        return first_usable, last_usable
 
-def _ipv6_first_last(v):
-    if v.size == 2:
-        first_usable = int(netaddr.IPAddress(v.first))
-        last_usable = int(netaddr.IPAddress(v.last))
+        if v.version == 4:
+            last_usable = int(netaddr.IPAddress(v.last - 1))
+        else:
+            last_usable = int(netaddr.IPAddress(v.last))            
         return first_usable, last_usable
-    elif v.size > 1:
-        first_usable = int(netaddr.IPAddress(v.first + 1))
-        last_usable = int(netaddr.IPAddress(v.last))
-        return first_usable, last_usable
-
 
 def _6to4_query(v, vtype, value):
     if v.version == 4:
@@ -326,7 +319,7 @@ def _ipv6_range_usable_query(v):
         raise errors.AnsibleFilterError("Prefix between 65 and 126 bits forbidden for address not starting with binary 000 (RFC 2526)")
 
     if v.size > 1:
-        first_usable, last_usable = _ipv6_first_last(v)
+        first_usable, last_usable = _first_last(v)
         first_usable = str(netaddr.IPAddress(first_usable))
         last_usable = str(netaddr.IPAddress(last_usable))
         return "{0}-{1}, except those reserved per https://www.iana.org/assignments/ipv6-interface-ids/ipv6-interface-ids.txt".format(first_usable, last_usable)
@@ -956,46 +949,29 @@ def network_in_usable(value, test):
 
     :return: bool
     '''
+        
     # normalize value and test variables into an ipaddr
     v = _address_normalizer(value)
     w = _address_normalizer(test)
 
-    # get first and last addresses as integers to compare value and test; or cathes value when case is /32
+    # sanity check IP protocol versions
+    v_test = netaddr.IPNetwork(v)
+    w_test = netaddr.IPNetwork(w)
+
+    if (v_test.version != w_test.version):
+        raise errors.AnsibleFilterError(alias + 'Cannot compare IPv4 address to IPv6 address')
+    
+    # get first and last addresses as integers to compare value and test; or cathes value when case is /32 or /128   
     v_first = ipaddr(ipaddr(v, 'first_usable') or ipaddr(v, 'address'), 'int')
     v_last = ipaddr(ipaddr(v, 'last_usable') or ipaddr(v, 'address'), 'int')
-    w_first = ipaddr(ipaddr(w, 'network') or ipaddr(w, 'address'), 'int')
+
+    w_first = ipaddr(ipaddr(w, 'network') or ipaddr(w, 'address'), 'int')    
     w_last = ipaddr(ipaddr(w, 'broadcast') or ipaddr(w, 'address'), 'int')
 
     if _range_checker(w_first, v_first, v_last) and _range_checker(w_last, v_first, v_last):
         return True
     else:
         return False
-
-
-def network_in_network(value, test):
-    '''
-    Checks whether the 'test' address or addresses are in 'value', including broadcast and network
-
-    :param: value: The network address or range to test against.
-    :param test: The address or network to validate if it is within the range of 'value'.
-
-    :return: bool
-    '''
-    # normalize value and test variables into an ipaddr
-    v = _address_normalizer(value)
-    w = _address_normalizer(test)
-
-    # get first and last addresses as integers to compare value and test; or cathes value when case is /32
-    v_first = ipaddr(ipaddr(v, 'network') or ipaddr(v, 'address'), 'int')
-    v_last = ipaddr(ipaddr(v, 'broadcast') or ipaddr(v, 'address'), 'int')
-    w_first = ipaddr(ipaddr(w, 'network') or ipaddr(w, 'address'), 'int')
-    w_last = ipaddr(ipaddr(w, 'broadcast') or ipaddr(w, 'address'), 'int')
-
-    if _range_checker(w_first, v_first, v_last) and _range_checker(w_last, v_first, v_last):
-        return True
-    else:
-        return False
-
 
 def reduce_on_network(value, network):
     '''
@@ -1132,7 +1108,6 @@ class FilterModule(object):
         'ipv6': ipv6,
         'ipsubnet': ipsubnet,
         'next_nth_usable': next_nth_usable,
-        'network_in_network': network_in_network,
         'network_in_usable': network_in_usable,
         'reduce_on_network': reduce_on_network,
         'nthhost': nthhost,
