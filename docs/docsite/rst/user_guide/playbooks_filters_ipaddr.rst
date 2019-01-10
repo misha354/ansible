@@ -231,13 +231,24 @@ Finding usable addresses from network ranges
 
 .. versionadded:: 2.4
 
+``ipaddr`` provides several filters that make it easy to
+identify usable host addresses in a subnet. There are
+some subtle differences between IPv4 and IPv6 in this respect.
+In IPv4, the last address in a subnet is reserved as the broadcast address.
+IPv6 doesn't have this restriction, but has other addresses reserved
+for various reasons such anycast or mobile IPv6.
+		  
 ``ipaddr('range_usable')`` will take a network range in
 CIDR notation and print the range of usable IP addresses in that range::
   
     # {{ test_list | ipaddr('net') | ipaddr('range_usable') }}
     [ "192.168.32.1-192.168.32.254",
       "2001:db8:32c:faad::1-2001:db8:32c:faad:ffff:ffff:ffff:ffff, except those reserved per https://www.iana.org/assignments/ipv6-interface-ids/ipv6-interface-ids.txt" ]
-   
+
+``ipaddr('first_usable')`` will return the first usable address in a subnet::
+    # {{  test_list | ipaddr('net') | ipaddr('first_usable')  }} 
+    [ "192.168.32.1", "2001:db8:32c:faad::1" ]
+    
 The ``network_in_usable()`` filter checks whether the query is
 a usable address or network range inside another network range::
 
@@ -251,10 +262,6 @@ a usable address or network range inside another network range::
 
     # "{{ '2001::dead:beef:0:0:0:0/64' | network_in_usable('2001::dead:beef:ffff:ffff:ffff:ffff') }}"
     True
-    
-Note that both of these filters give correct answers with respect to the last
-address on a subnet. It is not a usable host address in IPv4 (as it's the
-broadcast address), but is a perfectly valid usable host in IPv6.
 
 Getting information from host/prefix values
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
