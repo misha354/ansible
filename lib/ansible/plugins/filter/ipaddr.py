@@ -56,9 +56,9 @@ def _first_last(v):
         first_usable = int(netaddr.IPAddress(v.first + 1))
 
         if v.version == 6 and not v.is_ipv4_mapped() and not v.is_ipv4_compat():
-            last_usable = int(netaddr.IPAddress(v.last - 1))
+            last_usable = int(netaddr.IPAddress(v.last))
         else:
-            last_usable = int(netaddr.IPAddress(v.last))            
+            last_usable = int(netaddr.IPAddress(v.last - 1))            
         return first_usable, last_usable
 
 def _6to4_query(v, vtype, value):

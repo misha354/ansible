@@ -247,16 +247,19 @@ CIDR notation and prints the range of usable host IP addresses in that range::
       "2001:db8:32c:faad::1-2001:db8:32c:faad:ffff:ffff:ffff:ffff, except those reserved per https://www.iana.org/assignments/ipv6-interface-ids/ipv6-interface-ids.txt" ]
 
 ``ipaddr('first_usable')`` returns the first usable host address in a subnet::
-    # {{  test_list | ipaddr('net') | ipaddr('first_usable')  }} 
+  
+    # {{  test_list | ipaddr('net') | ipaddr('first_usable')  }}
     [ "192.168.32.1", "2001:db8:32c:faad::1" ]
 
-```ipaddr('last_usaable')`` returns the last usable host address in a subnet::
-    # "{{ test_list | ipaddr('net') | ipaddr('last_usable') }}
+``ipaddr('last_usable')`` returns the last usable host address in a subnet::
+  
+    # {{ test_list | ipaddr('net') | ipaddr('last_usable') }}
     [ "192.168.32.254", "2001:db8:32c:faad:ffff:ffff:ffff:ffff"]
     
-The ``network_in_usable()`` filter checks whether the query is
-a usable address or network range inside another network range::
-
+The ``network_in_usable()`` filter ensures that the address or network range
+given as the query does not overlap with the reserved addresses at the ends of the
+network passed as the value to the filter.::
+  
     # {% for address in ['192.168.0.0/24', '192.168.1.0/24', '192.168.0.1', '192.168.255.255'] | ipaddr %}
     {{ '192.168.0.0/16' | network_in_usable(address) }}
     {% endfor %} "
@@ -265,8 +268,17 @@ a usable address or network range inside another network range::
     True
     False
 
-    # "{{ '2001::dead:beef:0:0:0:0/64' | network_in_usable('2001::dead:beef:ffff:ffff:ffff:ffff') }}"
+Note that per IANA
+(https://www.iana.org/assignments/ipv6-interface-ids/ipv6-interface-ids.txt)
+almost all IPv6 network ranges contain reserved addresses that are
+not at the ends of the range. As such a  ``True`` result from this filter for an
+IPv6 network query does not mean that the query contains only usable host
+addresses. For example::
+  
+    # {{ '2001:0:dead:0:0:0:0:0/48' | network_in_usable('2001:0:dead:1:0:0:0:0/64') }}
     True
+
+However, ``2001::dead:1:fdff:ffff:ffff:ffff`` is a reserved, non-routable address.
 
 Getting information from host/prefix values
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
