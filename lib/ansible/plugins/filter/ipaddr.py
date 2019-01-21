@@ -55,7 +55,7 @@ def _first_last(v):
     elif v.size > 1:
         first_usable = int(netaddr.IPAddress(v.first + 1))
 
-        if v.version == 4:
+        if v.version == 6 and not v.is_ipv4_mapped() and not v.is_ipv4_compat():
             last_usable = int(netaddr.IPAddress(v.last - 1))
         else:
             last_usable = int(netaddr.IPAddress(v.last))            
@@ -314,7 +314,7 @@ def _check_ipv6_subnet_usable(v):
     Returns true if the passed IPv6 subnet contains any usable host addresses
     '''
     if (v.is_multicast()):
-        raise errors.AnsibleFilterError('Not a unicast address (RFC 4921)')
+        raise errors.AnsibleFilterError('No host addresses on multicast prefix (RFC 4921)')
 
     if ( v.prefixlen > 64 and v.prefixlen != 127):
         raise errors.AnsibleFilterError("Illegal prefix length (RFC 4921)")
@@ -327,10 +327,10 @@ def _check_ipv6_reserved_addresses(v):
     interface_id = int(v.ip) & 0x000000000000000ffffffffffffffff
 
     if _range_checker(interface_id, 0x02005EFFFE000000, 0x02005EFFFEFFFFFF):
-        return True
+        raise errors.AnsibleFilterError(str(v) + ' is a reserved address (RFC 4291)')
 
     if _range_checker(interface_id, 0xFDFFFFFFFFFFFF80, 0xFDFFFFFFFFFFFFFF):
-        return True
+        raise errors.AnsibleFilterError(str(v) + ' is a reserved address (RFC 2526)')
 
 def _range_usable_query(v, vtype):
     if vtype == 'address':
@@ -340,6 +340,7 @@ def _range_usable_query(v, vtype):
         if v.size > 1:
             if v.version == 6 and not v.is_ipv4_mapped() and not v.is_ipv4_compat():
                 # real (not IPv4 mapped/compatible) IPv6 networks have some reserved interface identifiers)
+                _check_ipv6_subnet_usable(v) 
                 format_string = "{0}-{1}, except those reserved per https://www.iana.org/assignments/ipv6-interface-ids/ipv6-interface-ids.txt"
             else:
                 format_string = "{0}-{1}"
@@ -967,13 +968,13 @@ def network_in_usable(value, test):
     w_test = netaddr.IPNetwork(w)
 
     if (v_test.version != w_test.version):
-        raise errors.AnsibleFilterError(alias + 'Cannot compare IPv4 address to IPv6 address')
+        raise errors.AnsibleFilterError('Cannot compare IPv4 address to IPv6 address')
 
-    # sanity check IPv6 subnet
+    # sanity check IPv6 arguments
     if (v_test.version == 6):
         _check_ipv6_subnet_usable(v_test)
-        if ipaddr(w, 'host'):
-
+        if ipaddr(w_test, 'host'):
+            _check_ipv6_reserved_addresses(w_test)
         
     # get first and last addresses as integers to compare value and test; or cathes value when case is /32 or /128   
     v_first = ipaddr(ipaddr(v, 'first_usable') or ipaddr(v, 'address'), 'int')
