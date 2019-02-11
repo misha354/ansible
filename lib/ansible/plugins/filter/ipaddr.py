@@ -311,13 +311,23 @@ def _public_query(v, value):
 
 def _check_ipv6_subnet_usable(v):
     '''
-    Returns true if the passed IPv6 subnet contains any usable host addresses
+    Sanity checks IPv6 subnets to make sure they are allowed to have host addresses
     '''
-    if (v.is_multicast()):
-        raise errors.AnsibleFilterError('No host addresses on multicast prefix (RFC 4921)')
+    # List from https://github.com/python/cpython/blob/3.7/Lib/ipaddress.py
+    reserved_list = ['::/8', '100::/8', '200::/7', '400::/6', '800::/5', '1000::/4',
+                     '4000::/3','6000::/3',
+                     '8000::/3','A000::/3',
+                     'C000::/3','E000::/4'
+                     '::/5', 'F800::/6',
+                     '::/9']
 
+    for reserved_net in reserved_list:
+        if v in netaddr.IPNetwork(reserved_net):
+            raise errors.AnsibleFilterError("IETF Reserved subnet")
+
+    # RFC 4291 requires 64 bit interface identifiers    
     if ( v.prefixlen > 64 and v.prefixlen != 127):
-        raise errors.AnsibleFilterError("Illegal prefix length (RFC 4921)")
+        raise errors.AnsibleFilterError("Illegal prefix length")
 
 def _check_ipv6_reserved_addresses(v):
     '''
@@ -339,7 +349,7 @@ def _range_usable_query(v, vtype):
     elif vtype == 'network':
         if v.size > 1:
             if v.version == 6 and not v.is_ipv4_mapped() and not v.is_ipv4_compat():
-                # real (not IPv4 mapped/compatible) IPv6 networks have some reserved interface identifiers)
+                # real (not IPv4 mapped/compatible) IPv6 networks have some reserved subnets and interface identifiers)
                 _check_ipv6_subnet_usable(v) 
                 format_string = "{0}-{1}, except those reserved per https://www.iana.org/assignments/ipv6-interface-ids/ipv6-interface-ids.txt"
             else:
